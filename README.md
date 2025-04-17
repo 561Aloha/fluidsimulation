@@ -39,85 +39,72 @@ Example:
 Inside your JSX, add a <canvas> element with a ref={canvasRef}.
 This is required for the simulation to attach to.
 
-<canvas ref={canvasRef} />
-
-useEffect(() => {
-  const fluidScript = document.createElement('script');
-  fluidScript.src = '/script.js';
-  fluidScript.async = true;
-
-  fluidScript.onload = () => {
-    if (window.initFluidSimulation && canvasRef.current && containerRef.current) {
-      window.initFluidSimulation(canvasRef.current, containerRef.current);
-    }
-  };
-
-  document.body.appendChild(fluidScript);
-
-  return () => {
-    if (document.body.contains(fluidScript)) {
-      document.body.removeChild(fluidScript);
-    }
-  };
-}, []);
 
 4.  Load the Script
 Use a useEffect to dynamically load and initialize script.js. Here's a simplified version:
 
-jsx
-
-useEffect(() => {
-  const fluidScript = document.createElement('script');
-  fluidScript.src = '/script.js';
-  fluidScript.async = true;
-
-  fluidScript.onload = () => {
-    if (window.initFluidSimulation && canvasRef.current && containerRef.current) {
-      window.initFluidSimulation(canvasRef.current, containerRef.current);
-    }
-  };
-
-  document.body.appendChild(fluidScript);
-
-  return () => {
-    if (document.body.contains(fluidScript)) {
-      document.body.removeChild(fluidScript);
-    }
-  };
-}, []);
-
 5. Adjust Your CSS
 To make sure the canvas stays behind your content:
 
-css
 
-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 0;
-  pointer-events: none;
-}
-🎨 Customizing the Simulation
-All the magic happens inside script.js. At the top, you'll find the config object:
+## ⚠️ Common Errors & Fixes
 
-js
+> 💡 **Tip:** You can adjust the behavior of the simulation by modifying the `config` object at the beginning of the script. This includes settings for resolution, interactivity, and whether the animation should run on mobile.
 
-let config = {
-  SIM_RESOLUTION: 128,
-  DYE_RESOLUTION: 1024,
-  DENSITY_DISSIPATION: 2.0,
-  VELOCITY_DISSIPATION: 1.33,
-  PRESSURE: 0.24,
-  PRESSURE_ITERATIONS: 3,
-  CURL: 30,
-  SPLAT_RADIUS: 0.03,
-  SPLAT_FORCE: 6000,
-  SHADING: true,
-  COLORFUL: true,
-  COLOR_UPDATE_SPEED: 10,
-  ...
-}
-👉 You can play around with different values and see how they affect behavior here:
-Pavel’s Live Fluid Playground
+---
 
+### 🧩 1. Buttons or Links Not Clickable
+
+Even though the canvas animation appears correctly in the background, clickable elements (like buttons or links) may not respond.
+
+**Cause:**  
+The canvas is set with `pointer-events: none` to allow content to sit on top. But any interactive element overlapping it must explicitly allow interactions.
+
+**✅ Fix:**  
+Add the following CSS to clickable elements:
+```css
+pointer-events: auto;
+```
+### 📱 Error 2: Scrollability Issues on Mobile
+
+**Problem:**  
+The fluid animation works, but the page becomes unscrollable on mobile devices.
+
+**Cause:**  
+The default interaction listeners in `script.js` (e.g. `touchstart`, `touchmove`) can block native scrolling on touch devices. These are usually commented out by default to prevent scroll interference.
+
+---
+
+**✅ Fix Options:**
+
+1. **Uncomment scroll-related event listeners in `script.js`**  
+   If you need touch interactivity (e.g. dragging on canvas), but also want scrollability:
+   - Uncomment the `touchstart`, `touchmove`, and related listeners.
+   - Be aware this may cause the animation to misbehave or freeze on certain devices.
+
+2. **Restrict animation to desktop only (Recommended for simplicity)**  
+   On [madebydianna.com](https://madebydianna.com), the animation is disabled for mobile by default.
+
+   **Suggested setup:**
+   - Set canvas to `position: fixed`
+   - Allow pointer interaction only when necessary
+   - Add a scroll trigger/button to guide users to the next section
+
+   ```css
+   canvas {
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     pointer-events: none; /* allows clicks to pass through */
+   }
+
+   .scroll-hint {
+     position: absolute;
+     bottom: 10%;
+     width: 100%;
+     text-align: center;
+     pointer-events: auto;
+   }
+```
